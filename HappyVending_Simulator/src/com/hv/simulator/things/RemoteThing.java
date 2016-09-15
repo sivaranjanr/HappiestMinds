@@ -469,4 +469,69 @@ public class RemoteThing extends VirtualThing
 		return prop;
 	}
 	
+	public void dispenseProduct(String productName)
+	{
+		try
+		{
+			Map<String,Integer> prop = getProposition(productName);
+			ArrayList<InventryBean> ibArr = readInventryFile();
+			boolean isdispensed = false;
+			for(String key : prop.keySet())
+			{
+				boolean isCompoundPresent = false;
+				for(InventryBean ib : ibArr)
+				{
+					if(ib.getItem().equalsIgnoreCase(key))
+					{
+						isCompoundPresent = true;
+						if(prop.get(key)>ib.getCurrent_quantity())
+						{
+							System.out.println("Less Inventry Unable to dispense the product");
+							isCompoundPresent = false;
+						}else
+						{
+							ib.setCurrent_quantity(ib.getCurrent_quantity()-prop.get(key));
+						}
+					}
+				}
+				if(!isCompoundPresent)
+				{
+					System.out.println("Unable to dispense.Required Compound is missing / less in inventry");
+					isdispensed = false;
+					break;
+				}else
+				{
+					isdispensed = true;
+				}
+			}
+			if(isdispensed)
+			{
+				UpdateInventryDetails(CreateInventryInfoTable(ibArr));
+			}
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private InfoTable CreateInventryInfoTable(ArrayList<InventryBean> invBeanArr) throws Exception
+	{
+		JSONObject response = new JSONObject();
+		try
+		{
+			DataShapeDefinition dsd = new DataShapeDefinition();
+			dsd.addFieldDefinition(new FieldDefinition("item", BaseTypes.STRING));
+			dsd.addFieldDefinition(new FieldDefinition("current_quantity", BaseTypes.NUMBER));
+			dsd.addFieldDefinition(new FieldDefinition("max_quantity", BaseTypes.NUMBER));
+			
+			Gson gson = new Gson();
+			response.put("dataShape", dsd.toJSON());
+			response.put("rows", new JSONArray(gson.toJson(invBeanArr)));
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		return InfoTable.fromJSON(response);
+	}
+	
 }
