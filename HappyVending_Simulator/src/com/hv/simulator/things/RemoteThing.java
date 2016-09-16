@@ -141,7 +141,7 @@ public class RemoteThing extends VirtualThing
 	
 	
 	@ThingworxServiceDefinition(name="UpdateInventryDetails",description="update invetry details")
-	public synchronized void UpdateInventryDetails(@ThingworxServiceParameter(name="inventry",baseType="INFOTABLE") InfoTable inventry,@ThingworxServiceParameter(name="isAddition",baseType="BOOLEAN") boolean isAddition)
+	public synchronized void UpdateInventryDetails(@ThingworxServiceParameter(name="inventry",baseType="INFOTABLE") InfoTable inventry,@ThingworxServiceParameter(name="isAddition",baseType="BOOLEAN") Boolean isAddition)
 	{
 		BufferedWriter br =null;
 		try
