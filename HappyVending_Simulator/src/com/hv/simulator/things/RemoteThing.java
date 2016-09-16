@@ -206,6 +206,7 @@ public class RemoteThing extends VirtualThing
 						br.write(",");
 					i++;
 				}
+				br.newLine();
 			}
 			
 		}catch(Exception e)
