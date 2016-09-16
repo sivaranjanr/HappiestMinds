@@ -141,12 +141,13 @@ public class RemoteThing extends VirtualThing
 	
 	
 	@ThingworxServiceDefinition(name="UpdateInventryDetails",description="update invetry details")
-	public synchronized void UpdateInventryDetails(@ThingworxServiceParameter(name="inventry",baseType="INFOTABLE") InfoTable inventry)
+	public synchronized void UpdateInventryDetails(@ThingworxServiceParameter(name="inventry",baseType="INFOTABLE") InfoTable inventry,@ThingworxServiceParameter(name="isAddition",baseType="BOOLEAN") boolean isAddition)
 	{
 		BufferedWriter br =null;
 		try
 		{
 			ArrayList<InventryBean> currentInventry = readInventryFile();
+			@SuppressWarnings("unchecked")
 			ArrayList<InventryBean> clonedCurrentInventry =(ArrayList<InventryBean>)currentInventry.clone();
 			br = new BufferedWriter(new FileWriter("ThingInventry.csv"));
 			ArrayList<String> header = new ArrayList<>();
@@ -168,7 +169,7 @@ public class RemoteThing extends VirtualThing
 				i=1;
 				for(String headerName : header)
 				{
-					br.write(row.getStringValue(headerName));
+					
 					if(headerName.equalsIgnoreCase("ITEM"))
 					{
 						for(InventryBean ib : currentInventry)
@@ -178,6 +179,22 @@ public class RemoteThing extends VirtualThing
 								clonedCurrentInventry.remove(ib);
 							}
 						}
+					}
+					if(isAddition)
+					{
+						if(headerName.equalsIgnoreCase("CURRENT_QUANTITY"))
+						{
+							for(InventryBean ib : currentInventry)
+							{
+								if(ib.getItem().equalsIgnoreCase(row.getStringValue("ITEM")))
+								{
+									br.write(ib.getCurrent_quantity()+row.getStringValue(headerName));
+								}
+							}
+						}
+					}else
+					{
+						br.write(row.getStringValue(headerName));
 					}
 					if(header.size()>i )
 						br.write(",");
@@ -560,7 +577,7 @@ public class RemoteThing extends VirtualThing
 			}
 			if(isdispensed)
 			{
-				UpdateInventryDetails(CreateInventryInfoTable(ibArr));
+				UpdateInventryDetails(CreateInventryInfoTable(ibArr),false);
 			}
 		}catch(Exception e)
 		{
