@@ -180,18 +180,19 @@ public class RemoteThing extends VirtualThing
 							}
 						}
 					}
-					if(isAddition)
+					if(isAddition!=null && isAddition)
 					{
-							for(InventryBean ib : currentInventry)
+						boolean haswritten =false;	
+						for(InventryBean ib : currentInventry)
 							{
-								if(ib.getItem().equalsIgnoreCase(row.getStringValue("ITEM")))
+								if(ib.getItem().equalsIgnoreCase(row.getStringValue("item"))&& headerName.equalsIgnoreCase("CURRENT_QUANTITY"))
 								{
-									if(headerName.equalsIgnoreCase("CURRENT_QUANTITY"))
-										br.write(ib.getCurrent_quantity()+row.getStringValue(headerName));
-									else
-										br.write(row.getStringValue(headerName));
+									br.write(String.valueOf(ib.getCurrent_quantity()+Double.parseDouble(row.getStringValue(headerName))));
+									haswritten=true;
 								}
 							}
+							if(!haswritten)
+							br.write(row.getStringValue(headerName));
 					}else
 					{
 						br.write(row.getStringValue(headerName));
@@ -204,9 +205,9 @@ public class RemoteThing extends VirtualThing
 			}
 			for(InventryBean ib : clonedCurrentInventry)
 			{
+				i=1;
 				for(String headerName : header)
 				{
-					i=1;
 					if(headerName.equalsIgnoreCase("ITEM"))
 					{
 						br.write(ib.getItem());
