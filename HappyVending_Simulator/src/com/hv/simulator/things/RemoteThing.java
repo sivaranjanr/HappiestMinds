@@ -34,7 +34,6 @@ import com.thingworx.types.collections.AspectCollection;
 import com.thingworx.types.collections.ValueCollection;
 import com.thingworx.types.constants.Aspects;
 import com.thingworx.types.constants.DataChangeType;
-import com.thingworx.types.primitives.IPrimitiveType;
 import com.thingworx.types.primitives.IntegerPrimitive;
 import com.thingworx.types.primitives.LocationPrimitive;
 import com.thingworx.types.primitives.StringPrimitive;
@@ -273,7 +272,6 @@ public class RemoteThing extends VirtualThing
 				propositionJSON.put("dataShape", propositionDS.toJSON());
 				propositionJSON.put("rows", new JSONArray(gson.toJson(productPropArr)));
 				
-				System.out.println(InfoTable.fromJSON(propositionJSON).toJSON());
 				pb.setProposition(propositionJSON.toString());
 				productsArr.add(pb);
 			}
@@ -283,7 +281,6 @@ public class RemoteThing extends VirtualThing
 		{
 			e.printStackTrace();
 		}
-		System.out.println(response);
 		return InfoTable.fromJSON(response);
 	}
 	
