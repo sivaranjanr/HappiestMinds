@@ -182,16 +182,16 @@ public class RemoteThing extends VirtualThing
 					}
 					if(isAddition)
 					{
-						if(headerName.equalsIgnoreCase("CURRENT_QUANTITY"))
-						{
 							for(InventryBean ib : currentInventry)
 							{
 								if(ib.getItem().equalsIgnoreCase(row.getStringValue("ITEM")))
 								{
-									br.write(ib.getCurrent_quantity()+row.getStringValue(headerName));
+									if(headerName.equalsIgnoreCase("CURRENT_QUANTITY"))
+										br.write(ib.getCurrent_quantity()+row.getStringValue(headerName));
+									else
+										br.write(row.getStringValue(headerName));
 								}
 							}
-						}
 					}else
 					{
 						br.write(row.getStringValue(headerName));
