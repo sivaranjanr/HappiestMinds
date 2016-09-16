@@ -44,7 +44,7 @@ public class RemoteThing extends VirtualThing
 	private static final long serialVersionUID = 1L;
 	static Properties props; 
 	Map<String,Double> inventryMap = new HashMap<>();
-	String[] products = {"COFFEE","TEA","ESPRESSO","CAPPUCHINO"};
+	public String[] products = {"COFFEE","TEA","ESPRESSO","CAPPUCHINO"};
 	static
 	{
 		props = new Properties();
@@ -139,14 +139,16 @@ public class RemoteThing extends VirtualThing
 		return InfoTable.fromJSON(response);
 	}
 	
+	
 	@ThingworxServiceDefinition(name="UpdateInventryDetails",description="update invetry details")
-	public void UpdateInventryDetails(@ThingworxServiceParameter(name="inventry",baseType="INFOTABLE") InfoTable inventry)
+	public synchronized void UpdateInventryDetails(@ThingworxServiceParameter(name="inventry",baseType="INFOTABLE") InfoTable inventry)
 	{
 		BufferedWriter br =null;
 		try
 		{
+			ArrayList<InventryBean> currentInventry = readInventryFile();
+			ArrayList<InventryBean> clonedCurrentInventry =(ArrayList<InventryBean>)currentInventry.clone();
 			br = new BufferedWriter(new FileWriter("ThingInventry.csv"));
-			
 			ArrayList<String> header = new ArrayList<>();
 			for(FieldDefinition fd : inventry.getDataShape().getFields().getOrderedFields())
 			{
@@ -167,12 +169,45 @@ public class RemoteThing extends VirtualThing
 				for(String headerName : header)
 				{
 					br.write(row.getStringValue(headerName));
+					if(headerName.equalsIgnoreCase("ITEM"))
+					{
+						for(InventryBean ib : currentInventry)
+						{
+							if(ib.getItem().equalsIgnoreCase(row.getStringValue(headerName)))
+							{
+								clonedCurrentInventry.remove(ib);
+							}
+						}
+					}
 					if(header.size()>i )
 						br.write(",");
 					i++;
 				}
 				br.newLine();
 			}
+			for(InventryBean ib : clonedCurrentInventry)
+			{
+				for(String headerName : header)
+				{
+					i=1;
+					if(headerName.equalsIgnoreCase("ITEM"))
+					{
+						br.write(ib.getItem());
+					}
+					if(headerName.equalsIgnoreCase("CURRENT_QUANTITY"))
+					{
+						br.write(String.valueOf(ib.getCurrent_quantity()));
+					}
+					if(headerName.equalsIgnoreCase("MAX_QUANTITY"))
+					{
+						br.write(String.valueOf(ib.getMax_quantity()));
+					}
+					if(header.size()>i )
+						br.write(",");
+					i++;
+				}
+			}
+			
 		}catch(Exception e)
 		{
 			e.printStackTrace();
@@ -448,7 +483,28 @@ public class RemoteThing extends VirtualThing
 	{
 		
 		Map<String,Integer> prop = null; 
-		if(productName.equalsIgnoreCase("COFFEE"))
+		Properties propositions = new Properties();
+		FileInputStream psFile;
+		try {
+			psFile = new FileInputStream("Proposition.properties");
+			propositions.load(psFile);
+			psFile.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		if(propositions.containsKey(productName))
+		{
+			prop = new HashMap<String, Integer>();
+			String pString = propositions.getProperty(productName);
+			String[] psArr = pString.split(",");
+			for(String p : psArr)
+			{
+				String[] qdetails = p.split(":");
+				prop.put(qdetails[0], Integer.parseInt(qdetails[1]));
+			}
+		}
+		/*if(productName.equalsIgnoreCase("COFFEE"))
 		{
 			prop = new HashMap<String, Integer>();
 			prop.put("MILK", 20);
@@ -462,7 +518,7 @@ public class RemoteThing extends VirtualThing
 			prop.put("COFFEE", 30);
 			prop.put("WATER", 10);
 			prop.put("SUGAR", 10);
-		}
+		}*/
 		return prop;
 	}
 	
@@ -481,13 +537,13 @@ public class RemoteThing extends VirtualThing
 					if(ib.getItem().equalsIgnoreCase(key))
 					{
 						isCompoundPresent = true;
-						if(prop.get(key)>ib.getCurrent_quantity())
+						if(prop.get(key)>(ib.getCurrent_quantity()*1000))
 						{
 							System.out.println("Less Inventry Unable to dispense the product");
 							isCompoundPresent = false;
 						}else
 						{
-							ib.setCurrent_quantity(ib.getCurrent_quantity()-prop.get(key));
+							ib.setCurrent_quantity(((ib.getCurrent_quantity()*1000)-prop.get(key))/1000);
 						}
 					}
 				}
@@ -509,6 +565,9 @@ public class RemoteThing extends VirtualThing
 		{
 			e.printStackTrace();
 		}
+		System.out.println("*****************************************************************");
+		System.out.println(productName+" dispensed.");
+		System.out.println("*****************************************************************");
 	}
 	
 	private InfoTable CreateInventryInfoTable(ArrayList<InventryBean> invBeanArr) throws Exception

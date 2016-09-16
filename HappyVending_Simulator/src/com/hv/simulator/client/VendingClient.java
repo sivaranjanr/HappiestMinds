@@ -25,9 +25,32 @@ public class VendingClient extends Thread
 			while(line ==null || !line.equalsIgnoreCase("q"))
 			{
 				System.out.println("Please select one option below to dispense ::");
+				String[] products = rt.products;
+				int i =1;
+				for(String productName : products)
+				{
+					System.out.println(i+"-->"+productName);
+					i++;
+				}
 				line = br.readLine();
 				System.out.println("Input Entered ::"+line);
-				rt.dispenseProduct("COFFEE");
+				if(line!=null&&!line.equalsIgnoreCase("q"))
+				{
+					try
+					{
+						int selection = Integer.parseInt(line);
+						if(selection > products.length || selection < 1)
+						{
+							System.out.println("Invalid selection, number not in list");
+						}else
+						{
+							rt.dispenseProduct(products[selection-1]);
+						}
+					}catch(NumberFormatException e)
+					{
+						System.out.println("Invalid input ["+line+"]. Please enter valid number");
+					}
+				}
 			}
 		}catch(Exception e)
 		{
