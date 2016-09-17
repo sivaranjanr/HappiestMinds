@@ -29,7 +29,7 @@ public class Bootstrap extends ConnectedThingClient
 		try
 		{
 			Logger rootLogger =(Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-			rootLogger.setLevel(Level.OFF);
+			rootLogger.setLevel(Level.DEBUG);
 			loadProperties();
 			ClientConfigurator conf = new ClientConfigurator();
 			conf.setAppKey(prop.getProperty("APP_KEY"));

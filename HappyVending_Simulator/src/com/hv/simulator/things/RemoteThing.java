@@ -34,6 +34,7 @@ import com.thingworx.types.collections.AspectCollection;
 import com.thingworx.types.collections.ValueCollection;
 import com.thingworx.types.constants.Aspects;
 import com.thingworx.types.constants.DataChangeType;
+import com.thingworx.types.primitives.InfoTablePrimitive;
 import com.thingworx.types.primitives.IntegerPrimitive;
 import com.thingworx.types.primitives.LocationPrimitive;
 import com.thingworx.types.primitives.StringPrimitive;
@@ -75,6 +76,8 @@ public class RemoteThing extends VirtualThing
 			this.setPropertyValue("locationCoordinates", new LocationPrimitive(new Location(Double.parseDouble(props.getProperty("LOCATION_LONG")),Double.parseDouble(props.getProperty("LOCATION_LAT")))));
 			this.setPropertyValue("locationName", new StringPrimitive(props.getProperty("LOCATION_NAME")));
 			this.setPropertyValue("cashInVault", new StringPrimitive(props.getProperty("CASH_IN_DEVICE")));
+			this.setPropertyValue("inventory", new InfoTablePrimitive(GetInventryDetails()));
+			this.setPropertyValue("products", new InfoTablePrimitive(GetProductDetails()));
 			this.updateSubscribedProperties(1000);
 			
 			
@@ -101,8 +104,8 @@ public class RemoteThing extends VirtualThing
 			propertyDefinition.setPersistent(persistent);
 			
 			AspectCollection apc = new AspectCollection();
-			apc.put(Aspects.ASPECT_DATACHANGETYPE, new StringPrimitive(DataChangeType.NEVER.name()));
-			apc.put("pushType", new StringPrimitive(DataChangeType.NEVER.name()));
+			apc.put(Aspects.ASPECT_DATACHANGETYPE, new StringPrimitive(DataChangeType.VALUE.name()));
+			apc.put("pushType", new StringPrimitive(DataChangeType.VALUE.name()));
 			//apc.put("cacheTime",new IntegerPrimitive(0));
 			propertyDefinition.setAspects(apc);
 			this.defineProperty(propertyDefinition);
