@@ -29,7 +29,7 @@ public class Bootstrap extends ConnectedThingClient
 		try
 		{
 			Logger rootLogger =(Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-			rootLogger.setLevel(Level.DEBUG);
+			rootLogger.setLevel(Level.OFF);
 			loadProperties();
 			ClientConfigurator conf = new ClientConfigurator();
 			conf.setAppKey(prop.getProperty("APP_KEY"));
@@ -51,7 +51,7 @@ public class Bootstrap extends ConnectedThingClient
 					{
 						vt.processScanRequest();
 					}
-					Thread.sleep(5000);
+					//Thread.sleep(5000);
 				}
 			}
 			

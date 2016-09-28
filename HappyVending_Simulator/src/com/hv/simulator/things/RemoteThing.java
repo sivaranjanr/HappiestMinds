@@ -417,7 +417,7 @@ public class RemoteThing extends VirtualThing
 		try
 		{
 			Random randomTemp = new Random();
-			return randomTemp.nextInt(100);
+			return 55+randomTemp.nextInt(10);
 		}catch(Exception e)
 		{
 			e.printStackTrace();
@@ -430,7 +430,7 @@ public class RemoteThing extends VirtualThing
 		try
 		{
 			Random randomHumid = new Random();
-			return randomHumid.nextInt(100);
+			return 30+randomHumid.nextInt(20);
 		}catch(Exception e)
 		{
 			e.printStackTrace();
