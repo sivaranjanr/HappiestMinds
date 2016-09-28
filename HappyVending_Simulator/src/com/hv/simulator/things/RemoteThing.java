@@ -154,10 +154,15 @@ public class RemoteThing extends VirtualThing
 			ArrayList<InventryBean> clonedCurrentInventry =(ArrayList<InventryBean>)currentInventry.clone();
 			br = new BufferedWriter(new FileWriter("ThingInventry.csv"));
 			ArrayList<String> header = new ArrayList<>();
+			boolean isMaxHeaderPresent = false;
 			for(FieldDefinition fd : inventry.getDataShape().getFields().getOrderedFields())
 			{
 				header.add(fd.getName());
+				if(fd.getName().equalsIgnoreCase("MAX_QUANTITY"))
+					isMaxHeaderPresent = true;
 			}
+			if(!isMaxHeaderPresent)
+				header.add("MAX_QUANTITY");
 			int i=1;
 			for(String headerName : header)
 			{
@@ -191,6 +196,14 @@ public class RemoteThing extends VirtualThing
 								if(ib.getItem().equalsIgnoreCase(row.getStringValue("item"))&& headerName.equalsIgnoreCase("CURRENT_QUANTITY"))
 								{
 									br.write(String.valueOf(ib.getCurrent_quantity()+Double.parseDouble(row.getStringValue(headerName))));
+									haswritten=true;
+								}
+								if(ib.getItem().equalsIgnoreCase(row.getStringValue("item"))&& headerName.equalsIgnoreCase("MAX_QUANTITY"))
+								{
+									if(row.getStringValue(headerName)!=null)
+										br.write(String.valueOf(ib.getMax_quantity()+Double.parseDouble(row.getStringValue(headerName))));
+									else
+										br.write(String.valueOf(ib.getMax_quantity()));
 									haswritten=true;
 								}
 							}
