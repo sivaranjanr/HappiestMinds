@@ -28,6 +28,7 @@ import com.thingworx.metadata.PropertyDefinition;
 import com.thingworx.metadata.annotations.ThingworxServiceDefinition;
 import com.thingworx.metadata.annotations.ThingworxServiceParameter;
 import com.thingworx.metadata.annotations.ThingworxServiceResult;
+import com.thingworx.relationships.RelationshipTypes.ThingworxEntityTypes;
 import com.thingworx.types.BaseTypes;
 import com.thingworx.types.InfoTable;
 import com.thingworx.types.collections.AspectCollection;
@@ -43,6 +44,8 @@ import com.thingworx.types.primitives.structs.Location;
 public class RemoteThing extends VirtualThing
 {
 	private static final long serialVersionUID = 1L;
+	ConnectedThingClient client;
+	String thingName;
 	static Properties props; 
 	Map<String,Double> inventryMap = new HashMap<>();
 	public String[] products = {"COFFEE","TEA","ESPRESSO","CAPPUCHINO"};
@@ -61,7 +64,8 @@ public class RemoteThing extends VirtualThing
 	public RemoteThing(String name, String description, String identifier, ConnectedThingClient client) 
 	{
 		super(name, description, identifier, client);
-		
+		this.client = client;
+		this.thingName=name;
 		initializeFromAnnotations();
 		defineProperties();
 	}
@@ -258,6 +262,14 @@ public class RemoteThing extends VirtualThing
 					e.printStackTrace();
 				}
 			}
+		}
+		
+		try 
+		{
+			fireInventryUpdatedEvent(GetInventryDetails());
+		} catch (Exception e) 
+		{
+			e.printStackTrace();
 		}
 	}
 	
@@ -623,6 +635,19 @@ public class RemoteThing extends VirtualThing
 			e.printStackTrace();
 		}
 		return InfoTable.fromJSON(response);
+	}
+	
+	private void fireInventryUpdatedEvent(InfoTable inventory)
+	{
+		try
+		{
+			ValueCollection inventoryUpdated = new ValueCollection();
+			inventoryUpdated.put("inventory", new InfoTablePrimitive(inventory));
+			client.fireEvent(ThingworxEntityTypes.Things, thingName, "InventoryUpdated", inventoryUpdated, 1000);
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 	}
 	
 }
