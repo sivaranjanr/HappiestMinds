@@ -668,7 +668,7 @@ public class RemoteThing extends VirtualThing
 			int id =0;
 			int milkThreshold = (int)Double.parseDouble(git.getRow(0).getValue("MilkThreshold").toString());
 			int waterThreshold =(int)Double.parseDouble(git.getRow(0).getValue("WaterThreshold").toString());
-			int cofeeBeanThreshold=(int)Double.parseDouble(git.getRow(0).getValue("CofeeBeanThreshold").toString());
+			int cofeeBeanThreshold=(int)Double.parseDouble(git.getRow(0).getValue("CoffeeBeanThreshold").toString());
 			int sugarThreshold=(int)Double.parseDouble(git.getRow(0).getValue("SugarThreshold").toString());
 			for(ValueCollection row : inventory.getRows())
 			{
