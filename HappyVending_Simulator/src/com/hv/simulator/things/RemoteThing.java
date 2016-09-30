@@ -651,7 +651,7 @@ public class RemoteThing extends VirtualThing
 		{
 			ValueCollection inventoryUpdated = new ValueCollection();
 			inventoryUpdated.put("inventory", new InfoTablePrimitive(inventory));
-			client.fireEvent(ThingworxEntityTypes.Things, thingName, "InventoryUpdated", inventoryUpdated, 1000);
+			client.fireEvent(ThingworxEntityTypes.Things, thingName, "inventoryUpdated", inventoryUpdated, 1000);
 		}catch(Exception e)
 		{
 			e.printStackTrace();
