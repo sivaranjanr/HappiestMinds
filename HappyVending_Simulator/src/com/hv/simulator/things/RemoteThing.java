@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Random;
+import java.util.concurrent.TimeoutException;
 
+import org.joda.time.DateTime;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -21,6 +23,7 @@ import com.hv.simulator.beans.InventryBean;
 import com.hv.simulator.beans.ProductConfigurationBean;
 import com.hv.simulator.beans.ProductPropositionBean;
 import com.thingworx.communications.client.ConnectedThingClient;
+import com.thingworx.communications.client.ConnectionException;
 import com.thingworx.communications.client.things.VirtualThing;
 import com.thingworx.metadata.DataShapeDefinition;
 import com.thingworx.metadata.FieldDefinition;
@@ -35,6 +38,7 @@ import com.thingworx.types.collections.AspectCollection;
 import com.thingworx.types.collections.ValueCollection;
 import com.thingworx.types.constants.Aspects;
 import com.thingworx.types.constants.DataChangeType;
+import com.thingworx.types.primitives.DatetimePrimitive;
 import com.thingworx.types.primitives.InfoTablePrimitive;
 import com.thingworx.types.primitives.IntegerPrimitive;
 import com.thingworx.types.primitives.LocationPrimitive;
@@ -46,6 +50,7 @@ public class RemoteThing extends VirtualThing
 	private static final long serialVersionUID = 1L;
 	ConnectedThingClient client;
 	String thingName;
+	String location;
 	static Properties props; 
 	Map<String,Double> inventryMap = new HashMap<>();
 	public String[] products = {"COFFEE","TEA","ESPRESSO","CAPPUCHINO"};
@@ -68,6 +73,7 @@ public class RemoteThing extends VirtualThing
 		this.thingName=name;
 		initializeFromAnnotations();
 		defineProperties();
+		getVendingMachineLocation();
 	}
 	
 	@Override
@@ -266,7 +272,9 @@ public class RemoteThing extends VirtualThing
 		
 		try 
 		{
-			fireInventryUpdatedEvent(GetInventryDetails());
+			InfoTable inventory = GetInventryDetails();
+			fireInventryUpdatedEvent(inventory);
+			checkAndProcessInventoryOrders(inventory);
 		} catch (Exception e) 
 		{
 			e.printStackTrace();
@@ -644,6 +652,102 @@ public class RemoteThing extends VirtualThing
 			ValueCollection inventoryUpdated = new ValueCollection();
 			inventoryUpdated.put("inventory", new InfoTablePrimitive(inventory));
 			client.fireEvent(ThingworxEntityTypes.Things, thingName, "InventoryUpdated", inventoryUpdated, 1000);
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private void checkAndProcessInventoryOrders(InfoTable inventory)
+	{
+		try
+		{
+			
+			InfoTable git=client.invokeService(ThingworxEntityTypes.Things, "HappyVedingGenericServices", "GetPropertyValues", new ValueCollection(), 1000);
+			InfoTable it = client.invokeService(ThingworxEntityTypes.Things, "VendingMachine_Order_DT", "GetPropertyValues", new ValueCollection(), 1000);
+			int id =0;
+			int milkThreshold = (int)Double.parseDouble(git.getRow(0).getValue("MilkThreshold").toString());
+			int waterThreshold =(int)Double.parseDouble(git.getRow(0).getValue("WaterThreshold").toString());
+			int cofeeBeanThreshold=(int)Double.parseDouble(git.getRow(0).getValue("CofeeBeanThreshold").toString());
+			int sugarThreshold=(int)Double.parseDouble(git.getRow(0).getValue("SugarThreshold").toString());
+			for(ValueCollection row : inventory.getRows())
+			{
+				String item = (String)row.getValue("item");
+				double currentQuantity =(Double)row.getValue("current_quantity");
+				double maxQuantity =(Double)row.getValue("max_quantity");
+				if(item.equalsIgnoreCase("MILK") && currentQuantity<milkThreshold)
+				{
+					id = Integer.parseInt(it.getRow(0).getValue("id").toString());
+					try
+					{
+						placeOrder(id, "MILK", maxQuantity - currentQuantity, location,currentQuantity,maxQuantity);
+					}catch(Exception e)
+					{
+						
+					}
+				}else if(item.equalsIgnoreCase("SUGAR") && currentQuantity<sugarThreshold)
+				{
+					id = Integer.parseInt(it.getRow(0).getValue("id").toString());
+					try
+					{
+						placeOrder(id, "SUGAR", maxQuantity - currentQuantity, location,currentQuantity,maxQuantity);
+					}catch(Exception e)
+					{
+						
+					}
+				}else if(item.equalsIgnoreCase("COFEE BEANS") && currentQuantity<cofeeBeanThreshold)
+				{
+					id = Integer.parseInt(it.getRow(0).getValue("id").toString());
+					try
+					{
+						placeOrder(id, "COFEE BEANS", maxQuantity - currentQuantity, location,currentQuantity,maxQuantity);
+					}catch(Exception e)
+					{
+						
+					}
+				}else if(item.equalsIgnoreCase("WATER") && currentQuantity<waterThreshold)
+				{
+					id = Integer.parseInt(it.getRow(0).getValue("id").toString());
+					try
+					{
+						placeOrder(id, "WATER", maxQuantity - currentQuantity, location,currentQuantity,maxQuantity);
+					}catch(Exception e)
+					{
+						
+					}
+				}
+			}
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	public void placeOrder(int id, String productName,double quantity,String location, double currentQuantity,double maxQuantity) throws TimeoutException, ConnectionException, Exception
+	{
+		ValueCollection vc = new ValueCollection();
+		vc.put("OrderStatus", new StringPrimitive("Open"));
+		vc.put("quantity", new IntegerPrimitive(quantity));
+		vc.put("User", new StringPrimitive(thingName));
+		vc.put("VendingMachineName", new StringPrimitive(thingName));
+		vc.put("id", new IntegerPrimitive(id));
+		vc.put("productName", new StringPrimitive(productName));
+		vc.put("Location", new StringPrimitive(location));
+		vc.put("OrderPlacedDate", new DatetimePrimitive(DateTime.now()));
+		vc.put("productDeliveryDate", new DatetimePrimitive(DateTime.now().plusDays(2)));
+		vc.put("currentQuantity", new IntegerPrimitive(currentQuantity));
+		vc.put("maxQuantity", new IntegerPrimitive(maxQuantity));
+		client.invokeService(ThingworxEntityTypes.Things, "VendingMachine_Order_DT", "PlaceOrder", vc, 1000);
+	}
+	
+	public void getVendingMachineLocation()
+	{
+		try
+		{
+			ValueCollection vc = new ValueCollection();
+			vc.put("VendingMachineName", new StringPrimitive(thingName));
+			InfoTable it=client.invokeService(ThingworxEntityTypes.Things, "HappyVedingGenericServices", "GetVendingMachineLocation", vc, 1000);
+			location = it.getRow(0).getValue("result").toString();
 		}catch(Exception e)
 		{
 			e.printStackTrace();
